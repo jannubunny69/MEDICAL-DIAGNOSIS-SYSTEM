@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Patient Dashboard — Choose Disease</title>
+  <link rel="stylesheet" href="static/styles.css"/>
+  <script src="static/app.js" defer></script>
+</head>
+<body>
+  <header class="header">Patient Dashboard</header>
+  <main class="container grid">
+    <section class="card">
+      <h2>Select a Disease</h2>
+      <p>Choose one of the supported diagnosis modules:</p>
+      <div class="disease-grid">
+        <button class="btn" onclick="location.href='alzheimers.html'">Alzheimer’s</button>
+        <button class="btn" onclick="location.href='parkinsons.html'">Parkinson’s</button>
+        <button class="btn" onclick="location.href='brain_tumor.html'">Brain Tumor</button>
+        <button class="btn" onclick="location.href='cancer.html'">Cancer</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>System Info</h2>
+      <p>This platform supports multi-modal patient data:</p>
+      <ul>
+        <li><strong>Imaging</strong>: MRI, CT, PET</li>
+        <li><strong>Text</strong>: Clinical notes, pathology reports</li>
+        <li><strong>Genomics</strong>: VCF, CSV</li>
+        <li><strong>Temporal</strong>: Tracks patient visits over time</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Parkinson's — Patient Dashboard</title>
+  <link rel="stylesheet" href="static/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="static/app.js" defer></script>
+  <script src="static/charts.js" defer></script>
+</head>
+<body>
+  <header class="header">Parkinson's — Patient Dashboard</header>
+  <main class="container grid">
+    <section class="card">
+      <h2>Patient Intake</h2>
+      <form id="patientForm" onsubmit="event.preventDefault(); createOrUpdatePatient(this);">
+        <label>Patient ID</label><input name="patient_id" placeholder="e.g. P-1001" required/>
+        <label>Name</label><input name="name"/>
+        <label>Age</label><input name="age" type="number"/>
+        <label>Sex</label>
+        <select name="sex"><option></option><option>M</option><option>F</option></select>
+        <div class="actions"><button class="btn" type="submit">Create / Update Patient</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Add Visit (Parkinson's)</h2>
+      <form id="visitForm" onsubmit="event.preventDefault(); uploadVisit(this, 'parkinsons');" enctype="multipart/form-data">
+        <label>Patient ID</label><input name="patient_id" required/>
+        <label>Visit Date</label><input name="visit_date" type="date" required/>
+        <label>Imaging (MRI/CT/PET)</label><input type="file" name="imaging" multiple accept='.nii,.dcm,.jpg,.jpeg,.png'/>
+        <label>Clinical Notes / Pathology</label><input type="file" name="notes" accept='.txt,.pdf,.docx'/>
+        <label>Genomics / Labs</label><input type="file" name="genomics" accept='.csv,.vcf'/>
+        <div class="actions"><button class="btn" type="submit">Upload Visit</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Run Inference</h2>
+      <form id="inferForm" onsubmit="event.preventDefault(); runInference('parkinsons', this);">
+        <label>Patient ID</label><input name="patient_id" placeholder="P-1001"/>
+        <div class="actions"><button class="btn" type="submit">Run Inference</button></div>
+      </form>
+      <pre id="result" class="inference-container"></pre>
+      <div style="margin-top:16px;">
+        <button class="btn" onclick="runMultiDiseaseInference()">Multi-Disease Inference</button>
+        <button class="btn" onclick="downloadPDFReport()">Download PDF Report</button>
+      </div>
+      <canvas id="timelineChart" width="400" height="180"></canvas>
+      <canvas id="riskChart" width="400" height="180"></canvas>
+      <canvas id="explainChart" width="400" height="180"></canvas>
+      <div style="margin-top:16px;">
+        <h3>Doctor's Notes</h3>
+        <textarea id="doctorNotes" rows="4" style="width:100%;"></textarea>
+        <button class="btn" onclick="saveDoctorNotes()">Save Notes</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Patient Snapshot</h2>
+      <div id="snapshot"></div>
+      <div style="margin-top:12px;">
+        <input id="snapshotPatientId" placeholder="patient_id"/>
+        <button class="btn" onclick="loadSnapshot(document.getElementById('snapshotPatientId').value)">Load Snapshot</button>
+      </div>
+    </section>
+    <script>
+    async function runMultiDiseaseInference() {
+      const pid = document.querySelector('#inferForm input[name="patient_id"]').value;
+      if (!pid) return alert('Provide patient_id');
+      const res = await fetch('/fusion/multi', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({patient_id: pid}) });
+      const data = await res.json();
+      showResult('result', data);
+      if (data.timeline) renderTimelineChart('timelineChart', data.timeline);
+      if (data.risk) renderRiskStratification('riskChart', data.risk);
+      if (data.explain) renderExplainabilityHeatmap('explainChart', data.explain);
+    }
+    async function downloadPDFReport() {
+      const pid = document.querySelector('#inferForm input[name="patient_id"]').value;
+      if (!pid) return alert('Provide patient_id');
+      window.open(`/report/pdf/${encodeURIComponent(pid)}`);
+    }
+    function saveDoctorNotes() {
+      const notes = document.getElementById('doctorNotes').value;
+      localStorage.setItem('parkinsons_doctor_notes', notes);
+      alert('Notes saved locally.');
+    }
+    function loadDoctorNotes() {
+      const notes = localStorage.getItem('parkinsons_doctor_notes');
+      if (notes) document.getElementById('doctorNotes').value = notes;
+    }
+    loadDoctorNotes();
+    renderTimelineChart('timelineChart', {visits:['V1','V2','V3'], probabilities:[0.2,0.5,0.8]});
+    renderRiskStratification('riskChart', {groups:['Low','Medium','High'], values:[10,5,2]});
+    renderExplainabilityHeatmap('explainChart', {labels:['MRI','PET','Notes'], datasets:[{data:[0.8,0.6,0.4]}]});
+    </script>
+  </main>
+</body>
+</html>
